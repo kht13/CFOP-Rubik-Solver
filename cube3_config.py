@@ -270,14 +270,12 @@ class cube3_config(cube_move):
         # if cube is solved, the cube will be randomized according to the standard procedure,
         # meaning that the cube's F face will be green and U face will be white
         if(self.isSolved()):
-            print(alg)
             self.resetCubeOr()
             self._startingAlg=alg
             self._centersCol=['W', 'B', 'R', 'G', 'O', 'Y']
             self.apply(alg)
             return self
         else:
-            self._startingAlg+=alg
             self.apply(alg)
             return self
 
