@@ -632,7 +632,7 @@ def check_Y_ro(cube):
     indices, pos = cube.getCenters(1, 2, 3, 4).values()
     return (indices[0]-pos[0])%4    
         
-def OLL(cube):
+def OLL(cube=cube3_config()):
     """
     TODO: write some description
     """    
@@ -976,7 +976,7 @@ def get_OLL_alg(cor_or_li, edg_or_li):
 
     return ""
 
-def PLL(cube):
+def PLL(cube=cube3_config()):
     """
     TODO: Write some description
     """
@@ -1111,6 +1111,9 @@ def get_PLL_alg(cor_pos_li, edg_pos_li):
                 return ruwix_PLL[key]
 
     return ""
+
+
+__all__ = ['Cross', 'F2L_one_pair', 'OLL', 'PLL']
 
 if __name__=="__main__":
     for x in range(1000000):

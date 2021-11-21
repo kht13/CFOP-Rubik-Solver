@@ -107,7 +107,7 @@ class cube_move:
         """
         if not isinstance(self, type(other)):
             raise Exception("The multiplicand must be a cube_move object.")
-        #for some reason, deepcopy from copy module of Permutation objects gives empty ones
+        #for some reason, deepcopy (from copy module) of Permutation objects gives empty ones
         cls=type(self)
         selfCopy=cls()
         selfCopy.__cen*=self.__cen

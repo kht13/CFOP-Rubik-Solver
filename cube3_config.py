@@ -57,11 +57,11 @@ class cube3_config(cube_move):
 
         #Replace the color letters with face letters. 
         for key, val in cube.__dict__.items():
-            valLow=val.lower()
+            valLower=val.lower()
             for i in range(len(_centersCol)):
-                if _centersCol[i].lower() in valLow:
-                    valLow=valLow.replace(_centersCol[i].lower(),cls._centers[i])
-            cube.__dict__[key]=valLow
+                if _centersCol[i].lower() in valLower:
+                    valLower=valLower.replace(_centersCol[i].lower(),cls._centers[i])
+            cube.__dict__[key]=valLower
         
         # array describing the corners. Each element has
         # a string of length 3, recording the faces of
@@ -267,35 +267,27 @@ class cube3_config(cube_move):
             if (index==numOfMoves-1):   #Don't add the trailing space for the last move
                 break
             alg+=" "
-        self._startingAlg+=alg
-        self.apply(alg)
-        return self
+        # if cube is solved, the cube will be randomized according to the standard procedure,
+        # meaning that the cube's F face will be green and U face will be white
+        if(self.isSolved()):
+            print(alg)
+            self.resetCubeOr()
+            self._startingAlg=alg
+            self._centersCol=['W', 'B', 'R', 'G', 'O', 'Y']
+            self.apply(alg)
+            return self
+        else:
+            self._startingAlg+=alg
+            self.apply(alg)
+            return self
 
     def isSolved(self):
         """
         Returns True when the cube is solved regardless of the cube orientation.
         """
-        cube = self
-        #check where the top center cubie is
-        U_cen_pos = cube.getCenters(0)['pos'][0]
-        if(U_cen_pos==1):
-            cube*=~cube.cubeMoveList['x']
-        elif(U_cen_pos==2):
-            cube*=~cube.cubeMoveList['z']
-        elif(U_cen_pos==3):
-            cube*=cube.cubeMoveList['x']
-        elif(U_cen_pos==4):
-            cube*=cube.cubeMoveList['z']
-        elif(U_cen_pos==5):
-            cube*=cube.cubeMoveList['x']**2
-        #Now check where F center cubie is
-        F_cen_pos = cube.getCenters(3)['pos'][0]
-        if(F_cen_pos==1):
-            cube*=cube.cubeMoveList['y']**2
-        elif(F_cen_pos==2):
-            cube*=cube.cubeMoveList['y']
-        elif(F_cen_pos==4):
-            cube*=~cube.cubeMoveList['y']
+        #Copy self to cube so that self won't change even if cube is manipulated
+        cube = cube3_config()*self
+        cube.resetCubeOr()
         #Now that the copy of the cube is oriented, we can check
         #the positions and orientations of corners and edges
         cor_dict = cube.getCorners()
@@ -306,15 +298,43 @@ class cube3_config(cube_move):
         edg_oriented = (edg_dict['or']==[0]*12)
         return ((cor_permutated and cor_oriented) and 
                 (edg_permutated and edg_oriented))
-
-        return False
+    
+    def resetCubeOr(self):
+        """
+        Resets the Cube orientation so that F faces front and U faces up
+        """
+        #check where the top center cubie is
+        U_cen_pos = self.getCenters(0)['pos'][0]
+        if(U_cen_pos==1):
+            self.executeMove(~self.cubeMoveList['x'])
+        elif(U_cen_pos==2):
+            self.executeMove(~self.cubeMoveList['z'])
+        elif(U_cen_pos==3):
+            self.executeMove(self.cubeMoveList['x'])
+        elif(U_cen_pos==4):
+            self.executeMove(self.cubeMoveList['z'])
+        elif(U_cen_pos==5):
+            self.executeMove(self.cubeMoveList['x']**2)
+        #Now check where F center cubie is
+        F_cen_pos = self.getCenters(3)['pos'][0]
+        if(F_cen_pos==1):
+            self.executeMove(self.cubeMoveList['y']**2)
+        elif(F_cen_pos==2):
+            self.executeMove(self.cubeMoveList['y'])
+        elif(F_cen_pos==4):
+            self.executeMove(~self.cubeMoveList['y'])
+        
+        return self
 
 if __name__ == "__main__":
     from sympy.interactive import init_printing
     init_printing(perm_cyclic=True, pretty_print=True)
     rubik3=cube3_config()
-    rubik3.apply("U2 R U2 R' U2 R B' R' U' R U R B R2 U'")
     print(str(rubik3.isSolved()))
+    rubik3.apply("x y")
+    print(str(rubik3.isSolved()))
+    print(rubik3.toString())
+    rubik3.randomizeCube()
     # rubik3.apply("R2 L F L2 R U' F L D2 R2 L2 F2 R2 F' B' D' R' D2 B2 U")
     # rubik3.apply("u D L' D' R u' R D' L' u L'")
     # rubik3.apply("y L U L' U (U F' U F U') (F' U' F)")
