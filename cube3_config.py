@@ -167,6 +167,91 @@ class cube3_config(cube_move):
     def startingAlg(self):
         return self._startingAlg
     
+    @property
+    def configDict(self):
+        """
+        ConfigDict is the configuration of the cube stored in
+        a dict with keys being letters representing the faces 
+        of the cube and the values being strings of length 9.
+        """
+        origCor=['ufl', 'urf', 'ubr', 'ulb', 
+                 'dbl', 'dlf', 'dfr', 'drb']
+        origEdg=['ub', 'ur', 'uf', 'ul', 'bl', 'br',
+                 'fr', 'fl', 'db', 'dr', 'df', 'dl']
+
+        corDict=self.getCorners()
+        edgDict=self.getEdges()
+        cenDict=self.getCenters()
+
+        corners=['']*8
+        edges=['']*12
+        centers=['']*6
+
+        for focus in range(3):
+            new_li=orig_li=target_dict=None
+            if focus==0:    #we will focus on corners
+                target_dict=corDict
+                orig_li=origCor
+                new_li=corners
+            elif focus==1:  #we will focus on edges
+                target_dict=edgDict
+                orig_li=origEdg
+                new_li=edges
+            elif focus==2:  #we will focus on centers
+                target_dict=cenDict
+                orig_li=list(map(lambda x: x.lower(), self._centers))
+                new_li=centers
+            for i in range(len(orig_li)):
+                if focus!=2:    #if the focus is on centers, we don't need to rotate strings
+                    n=target_dict['or'][i]
+                    # rotate the string left (clockwise) n times (orientation)
+                    # and assign
+                    new_li[target_dict['pos'][i]]=orig_li[i][n:] + orig_li[i][:n]
+                else:
+                    new_li[target_dict['pos'][i]]=orig_li[i]
+
+        #ordered arrays which stores face letters of each cubie for each face
+        U = [corners[3][0],  edges[0][0], corners[2][0],
+               edges[3][0],   centers[0],   edges[1][0], 
+             corners[0][0],  edges[2][0], corners[1][0]]
+ 
+        B = [corners[2][1],  edges[0][1], corners[3][2],
+               edges[5][0],   centers[1],   edges[4][0], 
+             corners[7][2],  edges[8][1], corners[4][1]]
+ 
+        R = [corners[1][1],  edges[1][1], corners[2][2],
+               edges[6][1],   centers[2],   edges[5][1], 
+             corners[6][2],  edges[9][1], corners[7][1]]
+ 
+        F = [corners[0][1],  edges[2][1], corners[1][2],
+               edges[7][0],   centers[3],   edges[6][0], 
+             corners[5][2], edges[10][1], corners[6][1]]
+ 
+        L = [corners[3][1],  edges[3][1], corners[0][2],
+               edges[4][1],   centers[4],   edges[7][1], 
+             corners[4][2], edges[11][1], corners[5][1]]
+ 
+        D = [corners[5][0], edges[10][0], corners[6][0],
+              edges[11][0],   centers[5],   edges[9][0], 
+             corners[4][0],  edges[8][0], corners[7][0]]
+        
+        #ordered arrays to dict with 6 string values, each having length 9
+        cube = {
+            'U': ''.join(U), 'B': ''.join(B), 
+            'R': ''.join(R), 'F': ''.join(F), 
+            'L': ''.join(L), 'D': ''.join(D)
+        }
+
+        #replace face letters with color letters, which are stored in the
+        #cube3_config class. The strings in the dict are already lower cases.
+        for key, val in cube.items():
+            for i in range(len(self._centers)):
+                if self._centers[i].lower() in val:
+                    val=val.replace(self._centers[i].lower(),self._centersCol[i])
+            cube[key]=val
+
+        return cube
+
     #one-layer moves
     cubeMoveList={
     'U':cube_move(corPermArr=[[0, 3, 2, 1]], edgPermArr=[[0, 1, 2, 3]]),
@@ -274,10 +359,10 @@ class cube3_config(cube_move):
             self._startingAlg=alg
             self._centersCol=['W', 'B', 'R', 'G', 'O', 'Y']
             self.apply(alg)
-            return self
+            return alg
         else:
             self.apply(alg)
-            return self
+            return alg
 
     def isSolved(self):
         """
