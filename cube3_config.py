@@ -44,6 +44,151 @@ class cube3_config(cube_move):
         must be of length 9, containing the colors of each visible
         face of all the cubies belonging to the respective face.
         """
+        return cls().changeConfiguration(configDict)
+
+    @property
+    def startingAlg(self):
+        return self._startingAlg
+    
+    @property
+    def configDict(self):
+        """
+        ConfigDict is the configuration of the cube stored in
+        a dict with keys being letters representing the faces 
+        of the cube and the values being strings of length 9.
+        """
+        origCor=['ufl', 'urf', 'ubr', 'ulb', 
+                 'dbl', 'dlf', 'dfr', 'drb']
+        origEdg=['ub', 'ur', 'uf', 'ul', 'bl', 'br',
+                 'fr', 'fl', 'db', 'dr', 'df', 'dl']
+
+        corDict=self.getCorners()
+        edgDict=self.getEdges()
+        cenDict=self.getCenters()
+
+        corners=['']*8
+        edges=['']*12
+        centers=['']*6
+
+        for focus in range(3):
+            new_li=orig_li=target_dict=None
+            if focus==0:    #we will focus on corners
+                target_dict=corDict
+                orig_li=origCor
+                new_li=corners
+            elif focus==1:  #we will focus on edges
+                target_dict=edgDict
+                orig_li=origEdg
+                new_li=edges
+            elif focus==2:  #we will focus on centers
+                target_dict=cenDict
+                orig_li=list(map(lambda x: x.lower(), self._centers))
+                new_li=centers
+            for i in range(len(orig_li)):
+                if focus!=2:    #if the focus is on centers, we don't need to rotate strings
+                    n=target_dict['or'][i]
+                    # rotate the string left (clockwise) n times (orientation)
+                    # and assign
+                    new_li[target_dict['pos'][i]]=orig_li[i][n:] + orig_li[i][:n]
+                else:
+                    new_li[target_dict['pos'][i]]=orig_li[i]
+
+        #ordered arrays which stores face letters of each cubie for each face
+        U = [corners[3][0],  edges[0][0], corners[2][0],
+               edges[3][0],   centers[0],   edges[1][0], 
+             corners[0][0],  edges[2][0], corners[1][0]]
+ 
+        B = [corners[2][1],  edges[0][1], corners[3][2],
+               edges[5][0],   centers[1],   edges[4][0], 
+             corners[7][2],  edges[8][1], corners[4][1]]
+ 
+        R = [corners[1][1],  edges[1][1], corners[2][2],
+               edges[6][1],   centers[2],   edges[5][1], 
+             corners[6][2],  edges[9][1], corners[7][1]]
+ 
+        F = [corners[0][1],  edges[2][1], corners[1][2],
+               edges[7][0],   centers[3],   edges[6][0], 
+             corners[5][2], edges[10][1], corners[6][1]]
+ 
+        L = [corners[3][1],  edges[3][1], corners[0][2],
+               edges[4][1],   centers[4],   edges[7][1], 
+             corners[4][2], edges[11][1], corners[5][1]]
+ 
+        D = [corners[5][0], edges[10][0], corners[6][0],
+              edges[11][0],   centers[5],   edges[9][0], 
+             corners[4][0],  edges[8][0], corners[7][0]]
+        
+        #ordered arrays to dict with 6 string values, each having length 9
+        cube = {
+            'U': ''.join(U), 'B': ''.join(B), 
+            'R': ''.join(R), 'F': ''.join(F), 
+            'L': ''.join(L), 'D': ''.join(D)
+        }
+
+        #replace face letters with color letters, which are stored in the
+        #cube3_config class. The strings in the dict are already lower cases.
+        for key, val in cube.items():
+            for i in range(len(self._centers)):
+                if self._centers[i].lower() in val:
+                    val=val.replace(self._centers[i].lower(),self._centersCol[i])
+            cube[key]=val
+
+        return cube
+    
+    @configDict.setter 
+    def configDict(self, value):
+        self.changeConfiguration(value)
+
+    #one-layer moves
+    cubeMoveList={
+    'U':cube_move(corPermArr=[[0, 3, 2, 1]], edgPermArr=[[0, 1, 2, 3]]),
+    'D':cube_move(corPermArr=[[4, 5, 6, 7]], edgPermArr=[[8, 11, 10, 9]]),
+    'F':cube_move(corPermArr=[[0, 1, 6, 5]], edgPermArr=[[2, 6, 10, 7]],
+                  corOrArr=[1, 2, 0, 0, 0, 2, 1, 0], 
+                  edgOrArr=[0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0]),
+    'B':cube_move(corPermArr=[[2, 3, 4, 7]], edgPermArr=[[0, 4, 8, 5]],
+                  corOrArr=[0, 0, 1, 2, 1, 0, 0, 2], 
+                  edgOrArr=[1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0]),
+    'L':cube_move(corPermArr=[[3, 0, 5, 4]], edgPermArr=[[3, 7, 11, 4]],
+                  corOrArr=[2, 0, 0, 1, 2, 1, 0, 0]),
+    'R':cube_move(corPermArr=[[1, 2, 7, 6]], edgPermArr=[[1, 5, 9, 6]],
+                  corOrArr=[0, 1, 2, 0, 0, 0, 2, 1]),
+    'M':cube_move(edgPermArr=[[0, 2, 10, 8]], cenPermArr=[[0, 3, 5, 1]],
+                  edgOrArr=[1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0]),
+    'E':cube_move(edgPermArr=[[4, 7, 6, 5]], cenPermArr=[[1, 4, 3, 2]],
+                  edgOrArr=[0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0]),
+    'S':cube_move(edgPermArr=[[1, 9, 11, 3]], cenPermArr=[[0, 2, 5, 4]],
+                  edgOrArr=[0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1])
+    }
+
+    #two-layer moves
+    cubeMoveList['u']=cubeMoveList['U']*~cubeMoveList['E']
+    cubeMoveList['d']=cubeMoveList['D']* cubeMoveList['E']
+    cubeMoveList['l']=cubeMoveList['L']* cubeMoveList['M']
+    cubeMoveList['r']=cubeMoveList['R']*~cubeMoveList['M']
+    cubeMoveList['f']=cubeMoveList['F']* cubeMoveList['S']
+    cubeMoveList['b']=cubeMoveList['B']*~cubeMoveList['S']
+
+    #three-layer moves or whole cube rotatation
+    cubeMoveList['x']=cubeMoveList['R']*~cubeMoveList['l']
+    cubeMoveList['y']=cubeMoveList['U']*~cubeMoveList['d']
+    cubeMoveList['z']=cubeMoveList['f']*~cubeMoveList['B']
+    cubeMoveList['X']=cubeMoveList['x']
+    cubeMoveList['Y']=cubeMoveList['y']
+    cubeMoveList['Z']=cubeMoveList['z']
+
+    def changeConfiguration(self, configDict={}):
+        """
+        Change the current cube's configuration to that provided. 
+        The configuration should be a dict containing 6 strings with 
+        keys corresponding to the faces of the cube: F, U, D, L, R 
+        and B. Each string must be of length 9, containing the colors 
+        of each visible face of all the cubies belonging to the 
+        respective face.
+        """
+        #reset the cube to starting configuration
+        self.executeMove(~self)
+
         #set up variables
         corPermArr=[0]*8
         corOrArr=[0]*8
@@ -60,8 +205,10 @@ class cube3_config(cube_move):
             valLower=val.lower()
             for i in range(len(_centersCol)):
                 if _centersCol[i].lower() in valLower:
-                    valLower=valLower.replace(_centersCol[i].lower(),cls._centers[i])
+                    valLower=valLower.replace(_centersCol[i].lower(),self._centers[i])
             cube.__dict__[key]=valLower
+
+        self._centersCol=_centersCol
         
         # array describing the corners. Each element has
         # a string of length 3, recording the faces of
@@ -161,134 +308,7 @@ class cube3_config(cube_move):
                                corOrArr=corOrArr, 
                                edgOrArr=edgOrArr)
         # Now, execute the move on a starting configuration
-        return cls().executeMove(moveAlgorithm)
-
-    @property
-    def startingAlg(self):
-        return self._startingAlg
-    
-    @property
-    def configDict(self):
-        """
-        ConfigDict is the configuration of the cube stored in
-        a dict with keys being letters representing the faces 
-        of the cube and the values being strings of length 9.
-        """
-        origCor=['ufl', 'urf', 'ubr', 'ulb', 
-                 'dbl', 'dlf', 'dfr', 'drb']
-        origEdg=['ub', 'ur', 'uf', 'ul', 'bl', 'br',
-                 'fr', 'fl', 'db', 'dr', 'df', 'dl']
-
-        corDict=self.getCorners()
-        edgDict=self.getEdges()
-        cenDict=self.getCenters()
-
-        corners=['']*8
-        edges=['']*12
-        centers=['']*6
-
-        for focus in range(3):
-            new_li=orig_li=target_dict=None
-            if focus==0:    #we will focus on corners
-                target_dict=corDict
-                orig_li=origCor
-                new_li=corners
-            elif focus==1:  #we will focus on edges
-                target_dict=edgDict
-                orig_li=origEdg
-                new_li=edges
-            elif focus==2:  #we will focus on centers
-                target_dict=cenDict
-                orig_li=list(map(lambda x: x.lower(), self._centers))
-                new_li=centers
-            for i in range(len(orig_li)):
-                if focus!=2:    #if the focus is on centers, we don't need to rotate strings
-                    n=target_dict['or'][i]
-                    # rotate the string left (clockwise) n times (orientation)
-                    # and assign
-                    new_li[target_dict['pos'][i]]=orig_li[i][n:] + orig_li[i][:n]
-                else:
-                    new_li[target_dict['pos'][i]]=orig_li[i]
-
-        #ordered arrays which stores face letters of each cubie for each face
-        U = [corners[3][0],  edges[0][0], corners[2][0],
-               edges[3][0],   centers[0],   edges[1][0], 
-             corners[0][0],  edges[2][0], corners[1][0]]
- 
-        B = [corners[2][1],  edges[0][1], corners[3][2],
-               edges[5][0],   centers[1],   edges[4][0], 
-             corners[7][2],  edges[8][1], corners[4][1]]
- 
-        R = [corners[1][1],  edges[1][1], corners[2][2],
-               edges[6][1],   centers[2],   edges[5][1], 
-             corners[6][2],  edges[9][1], corners[7][1]]
- 
-        F = [corners[0][1],  edges[2][1], corners[1][2],
-               edges[7][0],   centers[3],   edges[6][0], 
-             corners[5][2], edges[10][1], corners[6][1]]
- 
-        L = [corners[3][1],  edges[3][1], corners[0][2],
-               edges[4][1],   centers[4],   edges[7][1], 
-             corners[4][2], edges[11][1], corners[5][1]]
- 
-        D = [corners[5][0], edges[10][0], corners[6][0],
-              edges[11][0],   centers[5],   edges[9][0], 
-             corners[4][0],  edges[8][0], corners[7][0]]
-        
-        #ordered arrays to dict with 6 string values, each having length 9
-        cube = {
-            'U': ''.join(U), 'B': ''.join(B), 
-            'R': ''.join(R), 'F': ''.join(F), 
-            'L': ''.join(L), 'D': ''.join(D)
-        }
-
-        #replace face letters with color letters, which are stored in the
-        #cube3_config class. The strings in the dict are already lower cases.
-        for key, val in cube.items():
-            for i in range(len(self._centers)):
-                if self._centers[i].lower() in val:
-                    val=val.replace(self._centers[i].lower(),self._centersCol[i])
-            cube[key]=val
-
-        return cube
-
-    #one-layer moves
-    cubeMoveList={
-    'U':cube_move(corPermArr=[[0, 3, 2, 1]], edgPermArr=[[0, 1, 2, 3]]),
-    'D':cube_move(corPermArr=[[4, 5, 6, 7]], edgPermArr=[[8, 11, 10, 9]]),
-    'F':cube_move(corPermArr=[[0, 1, 6, 5]], edgPermArr=[[2, 6, 10, 7]],
-                  corOrArr=[1, 2, 0, 0, 0, 2, 1, 0], 
-                  edgOrArr=[0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0]),
-    'B':cube_move(corPermArr=[[2, 3, 4, 7]], edgPermArr=[[0, 4, 8, 5]],
-                  corOrArr=[0, 0, 1, 2, 1, 0, 0, 2], 
-                  edgOrArr=[1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0]),
-    'L':cube_move(corPermArr=[[3, 0, 5, 4]], edgPermArr=[[3, 7, 11, 4]],
-                  corOrArr=[2, 0, 0, 1, 2, 1, 0, 0]),
-    'R':cube_move(corPermArr=[[1, 2, 7, 6]], edgPermArr=[[1, 5, 9, 6]],
-                  corOrArr=[0, 1, 2, 0, 0, 0, 2, 1]),
-    'M':cube_move(edgPermArr=[[0, 2, 10, 8]], cenPermArr=[[0, 3, 5, 1]],
-                  edgOrArr=[1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0]),
-    'E':cube_move(edgPermArr=[[4, 7, 6, 5]], cenPermArr=[[1, 4, 3, 2]],
-                  edgOrArr=[0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0]),
-    'S':cube_move(edgPermArr=[[1, 9, 11, 3]], cenPermArr=[[0, 2, 5, 4]],
-                  edgOrArr=[0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1])
-    }
-
-    #two-layer moves
-    cubeMoveList['u']=cubeMoveList['U']*~cubeMoveList['E']
-    cubeMoveList['d']=cubeMoveList['D']* cubeMoveList['E']
-    cubeMoveList['l']=cubeMoveList['L']* cubeMoveList['M']
-    cubeMoveList['r']=cubeMoveList['R']*~cubeMoveList['M']
-    cubeMoveList['f']=cubeMoveList['F']* cubeMoveList['S']
-    cubeMoveList['b']=cubeMoveList['B']*~cubeMoveList['S']
-
-    #three-layer moves or whole cube rotatation
-    cubeMoveList['x']=cubeMoveList['R']*~cubeMoveList['l']
-    cubeMoveList['y']=cubeMoveList['U']*~cubeMoveList['d']
-    cubeMoveList['z']=cubeMoveList['f']*~cubeMoveList['B']
-    cubeMoveList['X']=cubeMoveList['x']
-    cubeMoveList['Y']=cubeMoveList['y']
-    cubeMoveList['Z']=cubeMoveList['z']
+        return self.executeMove(moveAlgorithm)
 
     def apply(self, algString=""):
         """
@@ -408,6 +428,14 @@ class cube3_config(cube_move):
             self.executeMove(~self.cubeMoveList['y'])
         
         return self
+
+    def __invert__(self):
+        """
+        Return the inverse position of the cube such that
+        the move executed to get to the original cube is inverted
+        and applied to the starting configuration.
+        """
+        return cube3_config().executeMove(self,reversed=True)
 
 if __name__ == "__main__":
     from sympy.interactive import init_printing

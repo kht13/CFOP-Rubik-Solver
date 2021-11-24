@@ -3,6 +3,7 @@ from sympy.combinatorics import Permutation
 
 def Cross(cube=cube3_config()):
     """TODO: Write some description"""
+    cube.changeConfiguration(cube.configDict) #reset the cube's bottom color
     algString = ""
     target_edge_indices=[8,9,10,11]
     finished_edges=[]
