@@ -143,8 +143,11 @@ class cube_move:
         return result
 
     def toString(self):
-        configString = (str(self.__cor) + ", "+str(self.__edg) + ", "+str(self.__cen))
-        configString = configString +"\n"+str(self.__corO)+"\n"+str(self.__edgO)
+        configString = " σ = "+ str(self.__cor) + "\n"
+        configString+= " τ = "+ str(self.__edg) + "\n"
+        configString+= " λ = "+ str(self.__cen) + "\n"
+        configString+= " x = "+ str(self.__corO)+ "\n"
+        configString+= " y = "+ str(self.__edgO)
         return configString
     
     def getCorners(self, *indices, indexArr=range(8)):
