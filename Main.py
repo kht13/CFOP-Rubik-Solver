@@ -157,12 +157,12 @@ rubik = cube3_config()
 
 while True:
     print()
-    print("Do you want to start with a random algorithm, or a custom configuration?")
-    rand_cust=input("[Random|Custom]: ")
-    while rand_cust.lower() not in ["random", "r", "custom", "c"]:
+    print("Do you want to start with a random algorithm, or a custom one, or a custom configuration?")
+    rand_cust=input("[Random|Algorithm|Config]: ")
+    while rand_cust.lower() not in ["random", "r", "algorithm", "a", "config", "configuration", "c"]:
         print("Please choose only Random or Custom!")
-        rand_cust=input("[Random|Custom]: ")
-    if(rand_cust.lower() in ["custom", "c"]):
+        rand_cust=input("[Random|Algorithm|Config]: ")
+    if(rand_cust.lower() in ["config", "configuration", "c"]):
         configDict=getCubeConfig()
         new_config = True
         
@@ -200,7 +200,6 @@ while True:
                     configDict = getCubeConfig(face_choice, configDict)
             
             rubik.configDict = configDict
-            #TODO: check if the user is okay with the config or if he/she wants to change specific faces
             print()
             printCubeConfig(rubik.configDict)
             print(rubik.toString())
@@ -217,7 +216,8 @@ while True:
                     break
                 else:
                     print('Please type only face letters or "Continue".')
-    else:
+
+    elif(rand_cust.lower() in ["random", "r"]):
         rand_alg=rubik.randomizeCube()
         print()
         print()
@@ -230,6 +230,35 @@ while True:
         printCubeConfig(rubik.configDict)
         print(rubik.toString())
         input("Press Enter to continue...")
+
+    else:
+        print()
+        print()
+        print()
+        print("Please provide the algorithm you want to start with. Note that the cube will be")
+        print("rotated so that the green colored face is the front face and the white colored")
+        print("face is facing upwards.")
+        while True:
+            print()
+            alg = input("Please type in the algorithm: ")
+            rubik.configDict={"U": "WWWWWWWWW", "R": "RRRRRRRRR", "B": "BBBBBBBBB",
+                            "F": "GGGGGGGGG", "L": "OOOOOOOOO", "D": "YYYYYYYYY"}
+
+            pattern = re.compile(r'[UDLRFBMESudlrfbxyzXYZ][0-9\']?')
+            alg = " ".join([x[0] for x in re.finditer(pattern, alg)])
+            rubik.apply(alg)
+            print()
+            printCubeConfig(rubik.configDict)
+            print(rubik.toString())
+            print()
+            print('Applied "'+alg+'".')
+            print("Please check if the algorithm is correct. If so, type continue.")
+            alg_cont=input("[Algorithm|Continue]: ")
+            while alg_cont.lower() not in ["algorithm", "a", "continue", "c", ""]:
+                print('Please type only "Algorithm" or "Continue"!')
+                alg_cont=input("[Algorithm|Continue]: ")
+            if alg_cont.lower() in ["continue", 'c', ""]:
+                break
 
     cross_alg = CFOP.Cross(rubik)
     if(cross_alg):
